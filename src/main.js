@@ -10,6 +10,10 @@ const fs = require('fs')
 const Store = require('./store')
 
 const LINE_HEIGHT = 240
+// 跨平台加速键：Windows/Linux 上 CommandOrControl = Ctrl，与历史行为一致；macOS 上为 Command
+const TOGGLE_ACCEL = 'CommandOrControl+Alt+T'
+const TOGGLE_ACCEL_LABEL = (process.platform === 'darwin' ? 'Cmd' : 'Ctrl') + '+Alt+T'
+const SELFCHECK_ACCEL = 'CommandOrControl+Alt+D'
 const userDataDir = app.getPath('userData')
 const capturesDir = path.join(userDataDir, 'captures')
 const originalsDir = path.join(capturesDir, 'originals')
@@ -42,13 +46,37 @@ const pendingFiles = new Map()
 let lastClipboardHash = ''
 
 function detectScreenshotDir() {
-  const pictures = app.getPath('pictures')
-  const names = ['Screenshots', '屏幕截图', 'Captures d\u00e9cran', 'Capturas de pantalla', 'Bildschirmfotos', 'Schermafbeeldingen']
-  for (const n of names) {
-    const c = path.join(pictures, n)
+  const platform = process.platform
+  const candidates = []
+
+  if (platform === 'darwin') {
+    // macOS：系统截图默认存桌面；若用户改过保存位置，常见为 图片/Screenshots
+    candidates.push(path.join(app.getPath('desktop')))
+    candidates.push(path.join(app.getPath('pictures'), 'Screenshots'))
+  } else if (platform === 'linux') {
+    // Linux(GNOME)：默认 图片/Screenshots；部分发行版/旧版本存桌面
+    candidates.push(path.join(app.getPath('pictures'), 'Screenshots'))
+    candidates.push(path.join(app.getPath('desktop')))
+  } else {
+    // Windows：图片\屏幕截图（含各语言本地化目录名）
+    const pictures = app.getPath('pictures')
+    const names = ['Screenshots', '屏幕截图', 'Captures d\u00e9cran', 'Capturas de pantalla', 'Bildschirmfotos', 'Schermafbeeldingen']
+    for (const n of names) candidates.push(path.join(pictures, n))
+  }
+
+  for (const c of candidates) {
     if (fs.existsSync(c)) return c
   }
-  const fallback = path.join(pictures, app.getLocale().toLowerCase().indexOf('zh') === 0 ? '屏幕截图' : 'Screenshots')
+
+  // 兜底：按平台约定建一个默认目录
+  let fallback
+  if (platform === 'darwin') {
+    fallback = path.join(app.getPath('desktop'))
+  } else if (platform === 'linux') {
+    fallback = path.join(app.getPath('pictures'), 'Screenshots')
+  } else {
+    fallback = path.join(app.getPath('pictures'), app.getLocale().toLowerCase().indexOf('zh') === 0 ? '屏幕截图' : 'Screenshots')
+  }
   try { fs.mkdirSync(fallback, { recursive: true }) } catch (e) { log('mkdir screenshot dir failed', e) }
   return fallback
 }
@@ -283,8 +311,8 @@ function testCopyImage() {
 
 function buildTrayMenu() {
   const anyOpen = expandedWins.size > 0
-  return Menu.buildFromTemplate([
-    { label: anyOpen ? '收起晾片' : '展开晾片 (Ctrl+Alt+T)', click: function () { toggleAll() } },
+  const items = [
+    { label: anyOpen ? '收起晾片' : '展开晾片 (' + TOGGLE_ACCEL_LABEL + ')', click: function () { toggleAll() } },
     { label: '复制示例图到剪贴板（测试剪贴板通道）', click: testCopyImage },
     { type: 'separator' },
     { label: '打开截图文件夹', click: function () { shell.openPath(getScreenshotDir()) } },
@@ -295,17 +323,21 @@ function buildTrayMenu() {
       type: 'checkbox',
       checked: store.data.settings.moveScreenshots,
       click: function (mi) { store.data.settings.moveScreenshots = mi.checked; store.save() }
-    },
-    {
+    }
+  ]
+  // 开机自启：Electron 仅实现了 Windows / macOS，Linux 上调用会抛错，故隐藏该菜单项
+  if (process.platform === 'win32' || process.platform === 'darwin') {
+    items.push({
       label: '开机自启',
       type: 'checkbox',
       checked: app.getLoginItemSettings().openAtLogin,
       click: function (mi) { app.setLoginItemSettings({ openAtLogin: mi.checked }) }
-    },
-    { type: 'separator' },
-    { label: '清空晾片', click: function () { store.clear(); broadcastPhotos() } },
-    { label: '退出', click: function () { app.quit() } }
-  ])
+    })
+  }
+  items.push({ type: 'separator' })
+  items.push({ label: '清空晾片', click: function () { store.clear(); broadcastPhotos() } })
+  items.push({ label: '退出', click: function () { app.quit() } })
+  return Menu.buildFromTemplate(items)
 }
 
 function captureSelfCheck() {
@@ -423,9 +455,9 @@ app.whenReady().then(function () {
   tray.setContextMenu(buildTrayMenu())
 
   try {
-    globalShortcut.register('Ctrl+Alt+T', function () { toggleAll() })
-    globalShortcut.register('Ctrl+Alt+D', captureSelfCheck)
-    log('shortcuts registered: Ctrl+Alt+T (toggle), Ctrl+Alt+D (selfcheck)')
+    globalShortcut.register(TOGGLE_ACCEL, function () { toggleAll() })
+    globalShortcut.register(SELFCHECK_ACCEL, captureSelfCheck)
+    log('shortcuts registered: ' + TOGGLE_ACCEL_LABEL + ' (toggle), ' + SELFCHECK_ACCEL + ' (selfcheck)')
   } catch (e) { log('global shortcut register failed', e) }
 
   baselineScreenshots()
@@ -440,8 +472,8 @@ app.whenReady().then(function () {
     metricsTimer = setTimeout(createLineWindows, 600)
   })
 
-  // 调试钩子：CLOTHESLINE_DEBUG=expand,capture 启动后自动展开并截图自查（无头环境验证用）
-  const debugFlags = (process.env.CLOTHESLINE_DEBUG || '').split(',')
+  // 调试钩子：SNAPLINE_DEBUG=expand,capture 启动后自动展开并截图自查（无头环境验证用）
+  const debugFlags = (process.env.SNAPLINE_DEBUG || '').split(',')
   if (debugFlags.indexOf('expand') !== -1) {
     setTimeout(function () {
       for (const entry of lineWindows) expandWindow(entry, 'toggle')

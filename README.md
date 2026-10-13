@@ -1,7 +1,7 @@
 # 晾片 SnapLine (PC 版)
 
-> 把截图挂到屏幕顶部的一根绳子上 —— [Tendedero](https://github.com/alejandrobujan/tendedero) 的 Windows 复刻版。
-> 原版：macOS / Swift（MIT + 名称/图标不授权）。本仓库为 PC（Windows）复刻，代码原创，MIT 许可，名称与图标均为自创。
+> 把截图挂到屏幕顶部的一根绳子上 —— [Tendedero](https://github.com/alejandrobujan/tendedero) 的 PC 复刻版（Windows / macOS / Linux）。
+> 原版：macOS / Swift（MIT + 名称/图标不授权）。本仓库为跨平台复刻，代码原创，MIT 许可，名称与图标均为自创。
 
 ## 这是什么
 
@@ -14,14 +14,39 @@
 - **右键** → 菜单（复制 / 打开 / 在文件夹中显示 / 从晾片移除）
 - **拖拽**照片到别的应用或文件夹 → 直接投递（文件留在原处，离开晾片）
 - **拖到右下角回收站图标** → 移除（文件移入回收目录，不删除）
-- **Ctrl+Alt+T** → 全局显示/隐藏晾片
+- **Ctrl+Alt+T**（macOS 为 `Cmd+Alt+T`）→ 全局显示/隐藏晾片
 - 托盘图标 → 完整菜单（展开/收起、打开截图文件夹、存放目录、开机自启、退出）
 
 截图默认**不落桌面、不进系统截图文件夹的视线**——应用自动把新截图归档到自己的数据目录。
 
+## 支持平台
+
+基于 Electron 37，代码无平台分支（`process.platform` 仅用于适配系统约定），**Windows / macOS / Linux 三平台可用**：
+
+| 能力 | Windows | macOS | Linux |
+|---|---|---|---|
+| 多屏透明置顶晾片窗 | ✅ | ✅ | ✅ |
+| 鼠标碰顶沿下滑展开 | ✅ | ✅ | ✅ |
+| 截图文件夹监听 | ✅ `图片\屏幕截图` | ⚠️ 桌面（见下方说明） | ✅ `图片/Screenshots` |
+| 剪贴板图片监听 | ✅ | ✅ | ✅ |
+| 单击复制 / 双击打开 / 拖出投递 | ✅ | ✅ | ✅ |
+| 托盘菜单 | ✅ | ✅ | ✅ |
+| 全局快捷键 | `Ctrl+Alt+T` | `Cmd+Alt+T` | `Ctrl+Alt+T` |
+| 开机自启 | ✅ | ✅ | ❌ 不支持（Electron 未实现，菜单项自动隐藏） |
+
+**平台差异说明**
+
+- **截图来源**：macOS 默认截到**桌面**（`⌘⇧4` / `⌘⇧5`），Linux(GNOME) 存 `图片/Screenshots`，Windows 存 `图片\屏幕截图`。应用按平台自动选择监听目录，也可在 `store.json` 的 `screenshotDir` 里手动指定。
+- **macOS 监桌面是"粗放"方案**：会收到桌面上的所有新图片，不只是截图（因为 macOS 没有提供"只收截图"的接口）。Windows / Linux 版没有这个问题——它们监听的是截图专用目录。
+- **开机自启**：Electron 的 `setLoginItemSettings` 只实现了 Windows 与 macOS，Linux 上会抛错，故该菜单项在 Linux 自动隐藏。
+- **快捷键**：注册用的是 `CommandOrControl+Alt+T`，在 Windows/Linux 上解析为 `Ctrl+Alt+T`（与历史行为一致），macOS 上为 `Cmd+Alt+T`。
+- **打包**：多平台分发需用 electron-builder，且 macOS 安装包必须在 macOS 上构建（或走 CI）。当前仓库只提供源码运行方式。
+
+> ⚠️ 上述 mac / Linux 结论来自代码走查，尚未在真实 mac / Linux 机器上实测——开发者环境只有 Windows。
+
 ## 原始项目（本作品的来源）
 
-本项目是 **Tendedero** 的 Windows 复刻版。原版信息（2026-10-13 经 GitHub API 核实）：
+本项目是 **Tendedero** 的 PC 复刻版（Windows / macOS / Linux）。原版信息（2026-10-13 经 GitHub API 核实）：
 
 | 项 | 原版 Tendedero | 本项目 晾片 SnapLine |
 |---|---|---|
@@ -75,9 +100,9 @@ npm start
 | `recycle\` | 从晾片移除的文件（可找回，不删除） |
 | `store.json` | 晾片上的照片列表 + 设置 |
 | `debug.log` | 运行日志（排查问题看这个） |
-| `selfcheck\` | Ctrl+Alt+D 界面自查截图 |
+| `selfcheck\` | `Ctrl+Alt+D`（macOS 为 `Cmd+Alt+D`）界面自查截图 |
 
-监听目录：系统截图文件夹（自动识别中英文路径，默认 `图片\屏幕截图`）。用户在 Windows 设置里改了截图保存位置的话，目前需要手动同步（P1 做设置界面）。
+监听目录：系统截图文件夹，按平台自动选择（Windows `图片\屏幕截图`、macOS 桌面、Linux `图片/Screenshots`），也可在 `store.json` 的 `screenshotDir` 里手动指定。
 
 ## 代码结构
 
@@ -96,6 +121,7 @@ snap-line/
 │   ├── make-icon.js       程序化生成应用图标（PNG 编码器，零依赖）
 │   ├── smoke-test.js      冒烟测试：往截图文件夹丢图，验证自动挂线
 │   ├── clip-test.js       剪贴板通道测试：写图到剪贴板，验证自动挂线
+│   ├── test-detect-dir.js 截图目录平台分支单测（Windows/macOS/Linux 共 11 例）
 │   └── migrate-userdata.js 旧目录名数据迁移工具（复制式，保留原目录）
 ├── LICENSE                MIT
 └── assets/icon.png        应用/托盘图标
@@ -103,7 +129,7 @@ snap-line/
 
 ## 技术要点
 
-- **多屏**：每个显示器一个透明置顶窗（`WS_EX_LAYERED` + `TOPMOST` + screen-saver 层级），`EnumDisplayMonitors` 遍历。
+- **多屏**：遍历 `screen.getAllDisplays()`，每个显示器建一个透明、无边框、置顶窗（`alwaysOnTop`，层级 `screen-saver`），高度固定 240px。
 - **点击穿透**：收起时 `setIgnoreMouseEvents(true, {forward:true})`——窗口不挡鼠标，但渲染层仍能收到 `mousemove`，实现"鼠标碰顶沿即展开"。
 - **两种展开模式**：悬停展开（`hover`，鼠标离开即收起）与快捷键/托盘展开（`toggle`，保持展开；鼠标进入后自动转 hover 语义）。
 - **截图监听**：轮询扫描系统截图文件夹（比 fs.watch 在 Windows 上稳），文件大小两次扫描稳定后才收录（避免截到写一半的文件）。
@@ -115,11 +141,12 @@ snap-line/
 
 ```bash
 # 应用运行中：
-node scripts/smoke-test.js   # 模拟新截图 → 应输出 PASS
-node scripts/clip-test.js    # 需要先启动 electron（见文件头说明）
+node scripts/smoke-test.js            # 模拟新截图 → 应输出 PASS
+node scripts/clip-test.js             # 需要先启动 electron（见文件头说明）
+node scripts/test-detect-dir.js       # 截图目录平台分支单测（11 例，无需启动应用）
 ```
 
-或直接手动：按 `Win+Shift+S` 截一张图，看屏幕顶部。
+或直接手动：按 `Win+Shift+S`（macOS 用 `⌘⇧4`）截一张图，看屏幕顶部。
 
 ## 已知限制（P1 待办）
 
@@ -128,7 +155,7 @@ node scripts/clip-test.js    # 需要先启动 electron（见文件头说明）
 - 空格快速预览窗未做
 - 全屏应用时自动隐藏未做（当前 screen-saver 层级会盖在全屏应用上）
 - 监听目录/快捷键的设置界面未做（目前改 `store.json`）
-- Windows 无法"接管"系统截图设置（macOS 原版可以），这是平台差异，已用双通道监听弥补
+- Windows / macOS 均无法"接管"系统截图设置（原版 Tendedero 在 macOS 上可以关掉浮动缩略图、改保存目录），这是平台差异，已用文件夹监听 + 剪贴板监听双通道弥补
 
 ## 许可
 
