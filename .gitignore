@@ -1,0 +1,32 @@
+# ---- 依赖 ----
+node_modules/
+
+# ---- 构建产物 ----
+dist/
+out/
+build/
+*.asar
+
+# ---- 日志 ----
+*.log
+npm-debug.log*
+
+# ---- 本机开发用的调试脚本（沙箱环境专用，不随仓库发布） ----
+scripts/diag.js
+scripts/send-keys.vbs
+scripts/make-icon.html
+
+# ---- 编辑器 / IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- 系统垃圾 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 本地环境 ----
+.env
+.env.local

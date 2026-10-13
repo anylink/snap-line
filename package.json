@@ -1,0 +1,16 @@
+{
+  "name": "snap-line",
+  "productName": "晾片",
+  "version": "0.1.0",
+  "description": "晾片 — 把截图挂到屏幕顶部（Windows 复刻版 Tendedero）",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu",
+    "test": "node scripts/smoke-test.js"
+  },
+  "author": "攀总 & 毛毛",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^37.10.3"
+  }
+}

@@ -1,0 +1,175 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: translateY(-100%);
+  transition: transform 0.38s cubic-bezier(0.22, 0.9, 0.35, 1);
+  will-change: transform;
+}
+
+#stage.open {
+  transform: translateY(0);
+}
+
+#rope {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  display: block;
+}
+
+#photos {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 0 60px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+#photos::-webkit-scrollbar { display: none; }
+
+.photo {
+  position: relative;
+  flex: none;
+  margin-top: 6px;
+  padding: 7px 7px 9px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(60, 50, 40, 0.14);
+  border-radius: 2px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+  transform-origin: top center;
+  animation: swing var(--dur, 3s) ease-in-out var(--delay, 0s) infinite alternate;
+  cursor: grab;
+}
+
+.photo:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.photo img {
+  display: block;
+  max-width: 240px;
+  max-height: 132px;
+  pointer-events: none;
+}
+
+.photo .pin {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 12px;
+  height: 24px;
+  margin-left: -6px;
+  background: linear-gradient(180deg, #d9b06a 0%, #c08f3e 100%);
+  border-radius: 3px 3px 5px 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.photo .pin::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: #8a6a2f;
+}
+
+.photo .badge {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #0f6e56;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+}
+
+.photo.new {
+  animation: flyin 0.45s cubic-bezier(0.22, 0.9, 0.35, 1), swing var(--dur, 3s) ease-in-out var(--delay, 0s) 0.45s infinite alternate;
+}
+
+@keyframes swing {
+  from { transform: rotate(calc(var(--tilt, 0deg) - 1.1deg)); }
+  to   { transform: rotate(calc(var(--tilt, 0deg) + 1.1deg)); }
+}
+
+@keyframes flyin {
+  from { opacity: 0; transform: translateX(90px) scale(0.55) rotate(6deg); }
+  to   { opacity: 1; transform: translateX(0) scale(1) rotate(0deg); }
+}
+
+#trash {
+  position: absolute;
+  right: 18px;
+  top: 52px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px dashed #b08575;
+  background: rgba(255, 250, 248, 0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
+}
+
+#trash.hot {
+  border-style: solid;
+  border-color: #a32d2d;
+  background: #fcebeb;
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+#toast {
+  position: absolute;
+  left: 50%;
+  top: 205px;
+  transform: translateX(-50%) translateY(6px);
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: rgba(15, 110, 86, 0.92);
+  color: #fff;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.18s, transform 0.18s;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
