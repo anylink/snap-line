@@ -1,7 +1,7 @@
 # 晾片 SnapLine (PC 版)
 
-> 把截图挂到屏幕顶部的一根绳子上 —— Tendedero 的 Windows 复刻版。
-> 原版：github.com/alejandrobujan/tendedero（macOS / Swift）。本仓库为 PC（Windows）复刻，代码原创，MIT 许可。
+> 把截图挂到屏幕顶部的一根绳子上 —— [Tendedero](https://github.com/alejandrobujan/tendedero) 的 Windows 复刻版。
+> 原版：macOS / Swift（MIT + 名称/图标不授权）。本仓库为 PC（Windows）复刻，代码原创，MIT 许可，名称与图标均为自创。
 
 ## 这是什么
 
@@ -18,6 +18,33 @@
 - 托盘图标 → 完整菜单（展开/收起、打开截图文件夹、存放目录、开机自启、退出）
 
 截图默认**不落桌面、不进系统截图文件夹的视线**——应用自动把新截图归档到自己的数据目录。
+
+## 原始项目（本作品的来源）
+
+本项目是 **Tendedero** 的 Windows 复刻版。原版信息（2026-10-13 经 GitHub API 核实）：
+
+| 项 | 原版 Tendedero | 本项目 晾片 SnapLine |
+|---|---|---|
+| 仓库 | [github.com/alejandrobujan/tendedero](https://github.com/alejandrobujan/tendedero) | [github.com/anylink/snap-line](https://github.com/anylink/snap-line) |
+| 作者 | Alejandro Buján（@alejandrobujan） | anylink |
+| 平台 | macOS，Swift / AppKit | Windows，Electron |
+| 一句话 | "Screenshots, hung out to dry." —— 把每张截图挂到屏幕顶部的一根绳子上 | 同左 |
+| 开源时间 | 2026-10-07（约 2023 stars / 166 forks） | 2026-10-13 |
+| 许可证 | MIT + 名称与图标不授权 | MIT（代码原创） |
+
+**借鉴的是产品概念与交互设计**，而非代码：
+
+- 「绳子 + 衣夹 + 玻璃相框」的视觉隐喻，以及鼠标靠近屏幕顶沿、照片随绳下滑的展开方式
+- 单击复制、双击打开、拖出投递到其他应用、拖走删除的交互
+- 「不让截图落在桌面 + 取消系统浮动缩略图」的产品思路（原版靠接管 macOS 截图设置实现，见下方平台差异）
+
+**本项目原创的是全部实现**：
+
+- 全部代码（原版为 Swift，本项目为 JavaScript，**无一行代码沿用**，按 MIT 许可参考其设计重写）
+- 全部视觉资源（应用图标由 `scripts/make-icon.js` 用 Node 手写 PNG 编码器绘制）
+- Windows 平台侧的技术实现（多屏透明置顶窗、点击穿透、双通道监听、OLE 文件拖放等）
+
+**命名与图标**：原版许可证的附加条款明确"改名、改图标"，并要求衍生作品**不得暗示自己是 Tendedero 或获得其作者认可**。本项目因此更名为「晾片 / SnapLine」并自绘图标——**与 Tendedero 无任何关联，亦非其作者认可**；此处提及 Tendedero 仅为说明作品来源，原版许可证明确允许这种引用。
 
 ## 快速开始
 
@@ -105,4 +132,22 @@ node scripts/clip-test.js    # 需要先启动 electron（见文件头说明）
 
 ## 许可
 
-MIT（名称与图标均为本项目原创，无原版资产）
+本项目代码以 **MIT** 许可开源，详见 [LICENSE](LICENSE)（Copyright © 2026 anylink）。
+
+### 原版许可与合规说明
+
+原始项目 **Tendedero** 同样采用 MIT 许可，但其许可证附加了「Name and icon」条款，原文如下：
+
+> The MIT License above covers the source code. It does not grant any rights to the Tendedero name or the Tendedero icon, including the icon artwork drawn by `scripts/make-icon.swift` and the images in the docs folder.
+>
+> You may build and use the app as published, and you may refer to Tendedero to say where your work comes from. Modified or redistributed versions must use a different name and a different icon, and must not suggest that they are Tendedero or are endorsed by its author.
+
+本项目的合规情况：
+
+| 要求 | 本项目状态 |
+|---|---|
+| 可使用、可再分发代码 | ✅ 按 MIT 参考其设计、以 JavaScript 重写 |
+| 衍生版必须使用**不同的名称** | ✅ 更名为「晾片 / SnapLine」，不再使用 Tendedero 一名 |
+| 衍生版必须使用**不同的图标** | ✅ 图标为程序化自绘，未使用原版图标资产 |
+| 不得暗示自己是 Tendedero 或获其作者认可 | ✅ README 已明确声明二者无关联 |
+| 可引用 Tendedero 说明作品来源 | ✅ 见「原始项目」章节 |
